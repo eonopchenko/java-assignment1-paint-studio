@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.json.JSONWriter;
 
 import javafx.application.Platform;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -33,6 +34,13 @@ import javafx.scene.paint.Color;
 
 public class ClientController implements Runnable {
 	
+	private enum Tool {
+		PEN,
+		LINE,
+		CIRCLE,
+		RECTANGLE,
+	}
+	
 	Socket client;
 	DataInputStream dis;
 	DataOutputStream dos;
@@ -43,6 +51,7 @@ public class ClientController implements Runnable {
 	double startYR;
 	GraphicsContext graphicsContext;
 	Color color = Color.BLACK;
+	Tool tool = Tool.PEN;
 	
 	@FXML
 	private ListView<String> lvUsers;
@@ -61,6 +70,9 @@ public class ClientController implements Runnable {
 	
 	@FXML
 	ToggleGroup tgColor;
+	
+	@FXML
+	ToggleGroup tgTool;
     
     @FXML
     void initialize() {
@@ -73,24 +85,35 @@ public class ClientController implements Runnable {
     		new EventHandler<MouseEvent>() {
 				@Override
 				public void handle(MouseEvent event) {
+					
 					startXL = event.getX();
 					startYL = event.getY();
-	            	graphicsContext.beginPath();
-	            	graphicsContext.moveTo(startXL, startYL);
-	            	graphicsContext.setStroke(color);
-            		graphicsContext.stroke();
+					
+        			StringWriter sw = new StringWriter();
+					JSONWriter jw = new JSONWriter(sw);
+					jw.object();
+					
+					if(tool == Tool.PEN) {
+		            	graphicsContext.beginPath();
+		            	graphicsContext.moveTo(startXL, startYL);
+		            	graphicsContext.setStroke(color);
+	            		graphicsContext.stroke();
+						jw.key("tool").value("pen");
+					} else if(tool == Tool.LINE) {
+						jw.key("tool").value("line");
+					} else if(tool == Tool.CIRCLE) {
+						jw.key("tool").value("circle");
+					} else if(tool == Tool.RECTANGLE) {
+						jw.key("tool").value("rectangle");
+					}
             		
             		try {
-            			dos.writeInt(Constants.CANVAS_BROADCAST);
-            			StringWriter sw = new StringWriter();
-						JSONWriter jw = new JSONWriter(sw);
-						jw.object();
-						jw.key("tool").value("pen");
 						jw.key("action").value("pressed");
 						jw.key("color").value("" + color);
 						jw.key("x").value("" + startXL);
 						jw.key("y").value("" + startYL);
 						jw.endObject();
+            			dos.writeInt(Constants.CANVAS_BROADCAST);
 						dos.writeUTF(sw.toString());
 	        			dos.flush();
 					} catch (UnsupportedEncodingException e1) {
@@ -105,23 +128,34 @@ public class ClientController implements Runnable {
     		new EventHandler<MouseEvent>() {
 				@Override
 				public void handle(MouseEvent event) {
+					
 					double x = event.getX();
 					double y = event.getY();
-	            	graphicsContext.setStroke(color);
-	            	graphicsContext.lineTo(x, y);
-	            	graphicsContext.stroke();
+					
+        			StringWriter sw = new StringWriter();
+					JSONWriter jw = new JSONWriter(sw);
+					jw.object();
+
+					if(tool == Tool.PEN) {
+		            	graphicsContext.setStroke(color);
+		            	graphicsContext.lineTo(x, y);
+		            	graphicsContext.stroke();
+						jw.key("tool").value("pen");
+					} else if(tool == Tool.LINE) {
+						jw.key("tool").value("line");
+					} else if(tool == Tool.CIRCLE) {
+						jw.key("tool").value("circle");
+					} else if(tool == Tool.RECTANGLE) {
+						jw.key("tool").value("rectangle");
+					}
             		
             		try {
-            			dos.writeInt(Constants.CANVAS_BROADCAST);
-            			StringWriter sw = new StringWriter();
-						JSONWriter jw = new JSONWriter(sw);
-						jw.object();
-						jw.key("tool").value("pen");
 						jw.key("action").value("dragged");
 						jw.key("color").value("" + color.toString());
 						jw.key("x").value("" + x);
 						jw.key("y").value("" + y);
 						jw.endObject();
+            			dos.writeInt(Constants.CANVAS_BROADCAST);
 						dos.writeUTF(sw.toString());
 	        			dos.flush();
 					} catch (UnsupportedEncodingException e1) {
@@ -136,26 +170,34 @@ public class ClientController implements Runnable {
     		new EventHandler<MouseEvent>() {
 				@Override
 				public void handle(MouseEvent event) {
+					
 					double x = event.getX();
 					double y = event.getY();
 					
-	            	double endX = x - startXL;
-	            	endX =  endX < 0 ? (endX * -1) : endX;
-	            	
-	            	double endY = y - startYL;
-	            	endY = endY < 0 ? (endY * -1) : endY;
+        			StringWriter sw = new StringWriter();
+					JSONWriter jw = new JSONWriter(sw);
+					jw.object();
+
+					if(tool == Tool.PEN) {
+		            	double endX = x - startXL;
+		            	endX =  endX < 0 ? (endX * -1) : endX;
+		            	double endY = y - startYL;
+		            	endY = endY < 0 ? (endY * -1) : endY;
+					} else if(tool == Tool.LINE) {
+						jw.key("tool").value("line");
+					} else if(tool == Tool.CIRCLE) {
+						jw.key("tool").value("circle");
+					} else if(tool == Tool.RECTANGLE) {
+						jw.key("tool").value("rectangle");
+					}
             		
             		try {
-            			dos.writeInt(Constants.CANVAS_BROADCAST);
-            			StringWriter sw = new StringWriter();
-						JSONWriter jw = new JSONWriter(sw);
-						jw.object();
-						jw.key("tool").value("pen");
 						jw.key("action").value("released");
 						jw.key("color").value("" + color.toString());
 						jw.key("x").value("" + x);
 						jw.key("y").value("" + y);
 						jw.endObject();
+            			dos.writeInt(Constants.CANVAS_BROADCAST);
 						dos.writeUTF(sw.toString());
 	        			dos.flush();
 					} catch (UnsupportedEncodingException e1) {
@@ -173,6 +215,25 @@ public class ClientController implements Runnable {
             {
 	        	RadioButton rb = (RadioButton)t1.getToggleGroup().getSelectedToggle();
 	        	color = Color.valueOf(rb.getStyleClass().toString().split(" ")[1]);
+            }
+        });
+    	
+    	tgTool.selectedToggleProperty().addListener(new ChangeListener<Toggle>()
+        {
+	        @Override
+	        public void changed(ObservableValue<? extends Toggle> ov, Toggle t, Toggle t1)
+            {
+	        	RadioButton rb = (RadioButton)t1.getToggleGroup().getSelectedToggle();
+	        	String id = rb.idProperty().getValue();
+	        	if(id.equals("pen")) {
+	        		tool = Tool.PEN;
+	        	} else if(id.equals("line")) {
+	        		tool = Tool.LINE;
+	        	} else if(id.equals("circle")) {
+	        		tool = Tool.CIRCLE;
+	        	} else if(id.equals("rectangle")) {
+	        		tool = Tool.RECTANGLE;
+	        	}
             }
         });
     }
@@ -250,15 +311,13 @@ public class ClientController implements Runnable {
 						JSONObject obj = new JSONObject(str);
 						int c = Integer.decode(obj.getString("color").substring(0, 8));
 						Color col = Color.rgb((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
-						String tool = obj.getString("tool");
+						double x = obj.getDouble("x");
+						double y = obj.getDouble("y");
+						String action = obj.getString("action");
+						String tl = obj.getString("tool");
 						
-						if(tool.equals("pen"))
-						{
-							double x = obj.getDouble("x");
-							double y = obj.getDouble("y");
-							String action = obj.getString("action");
-							if(action.equals("pressed"))
-							{
+						if(tl.equals("pen")) {
+							if(action.equals("pressed")) {
 								startXR = x;
 								startYR = y;
 								Platform.runLater(new Runnable() {
@@ -286,6 +345,30 @@ public class ClientController implements Runnable {
 						            	endY = endY < 0 ? (endY * -1) : endY;
 									}
 								});
+							}
+						} else if(tl.equals("line")) {
+							if(action.equals("pressed")) {
+								
+							} else if(action.equals("dragged")) {
+								
+							} else if(action.equals("released")) {
+								
+							}
+						} else if(tl.equals("circle")) {
+							if(action.equals("pressed")) {
+								
+							} else if(action.equals("dragged")) {
+								
+							} else if(action.equals("released")) {
+								
+							}
+						} else if(tl.equals("rectangle")) {
+							if(action.equals("pressed")) {
+								
+							} else if(action.equals("dragged")) {
+								
+							} else if(action.equals("released")) {
+								
 							}
 						}
 	            		

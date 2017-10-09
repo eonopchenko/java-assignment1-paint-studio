@@ -50,7 +50,7 @@
   -fx-background-repeat: stretch;
   -fx-shape: none;
   -fx-background-radius: 40px;
-  -fx-padding: 10px;
+  -fx-padding: 15px;
 }
 
 .radio-button:selected>.radio>.dot{
@@ -86,3 +86,19 @@
 .black .radio .dot{
 	-fx-background-color: black;
 } 
+
+.pen .radio .dot{
+	-fx-background-image: url("pen.png");
+}
+
+.line .radio .dot{
+	-fx-background-image: url("line.png");
+}
+
+.circle .radio .dot{
+	-fx-background-image: url("circle.png");
+}
+
+.rectangle .radio .dot{
+	-fx-background-image: url("rectangle.png");
+}
