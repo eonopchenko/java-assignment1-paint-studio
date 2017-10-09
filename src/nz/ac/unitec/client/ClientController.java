@@ -76,9 +76,6 @@ public class ClientController implements Runnable {
     	/// Bind Wrapper Pane and Canvas dimensions
         canvas.widthProperty().bind(wrapperPane.widthProperty());
         canvas.heightProperty().bind(wrapperPane.heightProperty());
-        canvas.widthProperty().addListener(event -> draw(canvas));
-        canvas.heightProperty().addListener(event -> draw(canvas));
-        draw(canvas);
     	
     	gc = canvas.getGraphicsContext2D();
     	
@@ -88,35 +85,22 @@ public class ClientController implements Runnable {
 				@Override
 				public void handle(MouseEvent event) {
 					
+					/// Save start coordinates
 					startXL = event.getX();
 					startYL = event.getY();
 
+					/// Set stroke color
 	            	gc.setStroke(color);
 	            	
+	            	/// Begin path for Pen or Line tool
 					if((tool.equals(Tool.PEN)) || (tool.equals(Tool.LINE))) {
 		            	gc.beginPath();
 		            	gc.moveTo(startXL, startYL);
 	            		gc.stroke();
 					}
 					
-            		try {
-            			StringWriter sw = new StringWriter();
-    					JSONWriter jw = new JSONWriter(sw);
-    					jw.object();
-    					jw.key("tool").value(tool.toString());
-						jw.key("action").value("pressed");
-						jw.key("color").value("" + color);
-						jw.key("x").value("" + startXL);
-						jw.key("y").value("" + startYL);
-						jw.endObject();
-            			dos.writeInt(Constants.CANVAS_BROADCAST);
-						dos.writeUTF(sw.toString());
-	        			dos.flush();
-					} catch (UnsupportedEncodingException e1) {
-						e1.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+					/// Build json object and transmit
+					broadcastCanvas("pressed", startXL, startYL);
 				}
 			});
 
@@ -129,29 +113,14 @@ public class ClientController implements Runnable {
 					double x = event.getX();
 					double y = event.getY();
 					
+					/// Draw line up to the current coordinate
 					if(tool.equals(Tool.PEN)) {
 			            gc.lineTo(x, y);
 			            gc.stroke();
 					}
-            		
-            		try {
-            			StringWriter sw = new StringWriter();
-    					JSONWriter jw = new JSONWriter(sw);
-    					jw.object();
-            			jw.key("tool").value(tool.toString());
-						jw.key("action").value("dragged");
-						jw.key("color").value("" + color.toString());
-						jw.key("x").value("" + x);
-						jw.key("y").value("" + y);
-						jw.endObject();
-            			dos.writeInt(Constants.CANVAS_BROADCAST);
-						dos.writeUTF(sw.toString());
-	        			dos.flush();
-					} catch (UnsupportedEncodingException e1) {
-						e1.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					/// Build json object and transmit
+					broadcastCanvas("dragged", x, y);
 				}
     		});
 
@@ -163,30 +132,15 @@ public class ClientController implements Runnable {
 					
 					double x = event.getX();
 					double y = event.getY();
-					
+
+					/// Draw line up to the current coordinate
 					if(tool == Tool.LINE) {
 		            	gc.lineTo(x, y);
 		            	gc.stroke();
 					}
-            		
-            		try {
-            			StringWriter sw = new StringWriter();
-    					JSONWriter jw = new JSONWriter(sw);
-    					jw.object();
-            			jw.key("tool").value(tool.toString());
-						jw.key("action").value("released");
-						jw.key("color").value("" + color.toString());
-						jw.key("x").value("" + x);
-						jw.key("y").value("" + y);
-						jw.endObject();
-            			dos.writeInt(Constants.CANVAS_BROADCAST);
-						dos.writeUTF(sw.toString());
-	        			dos.flush();
-					} catch (UnsupportedEncodingException e1) {
-						e1.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+
+					/// Build json object and transmit
+					broadcastCanvas("released", x, y);
 				}
     		});
     	
@@ -268,6 +222,7 @@ public class ClientController implements Runnable {
 					case Constants.CHAT_BROADCAST:
 						taChat.appendText(dis.readUTF()+"\n");
 						break;
+						
 					case Constants.REGISTER_BROADCAST:
 						String name = dis.readUTF();
 						Platform.runLater(new Runnable() {
@@ -280,13 +235,14 @@ public class ClientController implements Runnable {
 							}
 						});
 						break;
+						
 					case Constants.CANVAS_BROADCAST:
 						String str = dis.readUTF();
 						JSONObject obj = new JSONObject(str);
 						
 						/// Set stroke color
 						int c = Integer.decode(obj.getString("color").substring(0, 8));
-		            	gc.setStroke(Color.rgb((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF));
+						Color col = Color.rgb((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
 		            	
 						double x = obj.getDouble("x");
 						double y = obj.getDouble("y");
@@ -303,6 +259,7 @@ public class ClientController implements Runnable {
 							if(action.equals("pressed")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
+						            	gc.setStroke(col);
 						            	gc.beginPath();
 						            	gc.moveTo(startXR, startYR);
 					            		gc.stroke();
@@ -311,6 +268,7 @@ public class ClientController implements Runnable {
 							} else if(action.equals("dragged")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
+						            	gc.setStroke(col);
 						            	gc.lineTo(x, y);
 						            	gc.stroke();
 									}
@@ -322,6 +280,7 @@ public class ClientController implements Runnable {
 							if(action.equals("pressed")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
+						            	gc.setStroke(col);
 						            	gc.beginPath();
 						            	gc.moveTo(startXR, startYR);
 					            		gc.stroke();
@@ -330,6 +289,7 @@ public class ClientController implements Runnable {
 							} else if(action.equals("released")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
+						            	gc.setStroke(col);
 						            	gc.lineTo(x, y);
 						            	gc.stroke();
 									}
@@ -341,6 +301,7 @@ public class ClientController implements Runnable {
 							if(action.equals("released")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
+						            	gc.setStroke(col);
 										drawCircle(startXR, startYR, x, y);
 									}
 								});
@@ -351,6 +312,7 @@ public class ClientController implements Runnable {
 							if(action.equals("released")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
+						            	gc.setStroke(col);
 										drawRectangle(startXR, startYR, x, y);
 									}
 								});
@@ -360,14 +322,32 @@ public class ClientController implements Runnable {
 						break;
 				}
 			}
-			catch (IOException e)
-			{
+			catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
 	}
 	
-	void draw(Canvas c) {
+	/// Canvas network broadcasting
+	void broadcastCanvas(String action, double x, double y) {
+		try {
+			StringWriter sw = new StringWriter();
+			JSONWriter jw = new JSONWriter(sw);
+			jw.object();
+			jw.key("tool").value(tool.toString());
+			jw.key("action").value(action);
+			jw.key("color").value("" + color.toString());
+			jw.key("x").value("" + x);
+			jw.key("y").value("" + y);
+			jw.endObject();
+			dos.writeInt(Constants.CANVAS_BROADCAST);
+			dos.writeUTF(sw.toString());
+			dos.flush();
+		} catch (UnsupportedEncodingException e1) {
+			e1.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	void drawCircle(double startX, double startY, double endX, double endY) {
