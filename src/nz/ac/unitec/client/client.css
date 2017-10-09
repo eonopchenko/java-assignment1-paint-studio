@@ -37,3 +37,52 @@
         #a6b5c9,
         linear-gradient(#768aa5 0%, #849cbb 5%, #5877a2 50%, #486a9a 51%, #4a6c9b 100%);
 }
+
+.radio-button>.radio {
+  -fx-background-insets: 0;
+  -fx-background-radius: 0;
+  -fx-background-color: transparent;
+}
+
+.radio-button>.radio>.dot {
+  -fx-background-size: 35px;
+  -fx-background-position: center;
+  -fx-background-repeat: stretch;
+  -fx-shape: none;
+  -fx-background-radius: 40px;
+  -fx-padding: 10px;
+}
+
+.radio-button:selected>.radio>.dot{
+  	-fx-border-color: blue ;
+ 	-fx-border-width: 2 ; 
+	-fx-border-style: segments(1, 1, 1, 1)  line-cap round ;
+}
+
+.red .radio .dot{
+	-fx-background-color: red;
+}
+
+.orange .radio .dot{
+	-fx-background-color: orange;
+}
+
+.yellow .radio .dot{
+	-fx-background-color: yellow;
+}
+
+.green .radio .dot{
+	-fx-background-color: green;
+}
+
+.blue .radio .dot{
+	-fx-background-color: blue;
+} 
+
+.purple .radio .dot{
+	-fx-background-color: purple;
+} 
+
+.black .radio .dot{
+	-fx-background-color: black;
+} 

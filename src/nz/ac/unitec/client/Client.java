@@ -31,24 +31,10 @@ public class Client extends Application {
 	    	    
 	    	    FXMLLoader loader = new FXMLLoader(this.getClass().getClassLoader().getResource("ClientLayout.fxml"));
 	    	    Pane mainPane = loader.load();
-	    	    ClientController controller = loader.getController();
+//	    	    ClientController controller = loader.getController();
 
 	            Scene scene = new Scene(mainPane);
 	            scene.getStylesheets().add(getClass().getResource("client.css").toExternalForm());
-
-	            scene.widthProperty().addListener(new ChangeListener<Number>() {
-	                @Override public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
-	                	width = (double) newSceneWidth;
-	                    controller.SizeChanged(width, height);
-	                }
-	            });
-	            
-	            scene.heightProperty().addListener(new ChangeListener<Number>() {
-	                @Override public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
-	                	height = (double) newSceneHeight;
-	                    controller.SizeChanged(width, height);
-	                }
-	            });
 
 	            primaryStage.setTitle("Chat Client " + name);
 	            primaryStage.setScene(scene);

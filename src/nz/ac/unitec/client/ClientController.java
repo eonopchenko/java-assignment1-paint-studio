@@ -1,17 +1,19 @@
 package nz.ac.unitec.client;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import org.json.JSONObject;
+import org.json.JSONWriter;
+
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -21,12 +23,13 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import nz.ac.unitec.client.Constants;
-import org.json.*;
 
 public class ClientController implements Runnable {
 	
@@ -39,6 +42,7 @@ public class ClientController implements Runnable {
 	double startXR;
 	double startYR;
 	GraphicsContext graphicsContext;
+	Color color = Color.BLACK;
 	
 	@FXML
 	private ListView<String> lvUsers;
@@ -49,29 +53,21 @@ public class ClientController implements Runnable {
 	@FXML
 	private TextField tfSend;
 
-    @FXML
-    private Button btnSend;
+	@FXML
+	private Button btnSend;
     
-    @FXML
-    private Canvas canvas;
+	@FXML
+	private Canvas canvas;
+	
+	@FXML
+	ToggleGroup tgColor;
     
     @FXML
     void initialize() {
     	graphicsContext = canvas.getGraphicsContext2D();
     	
-        double canvasWidth = graphicsContext.getCanvas().getWidth();
-        double canvasHeight = graphicsContext.getCanvas().getHeight();
-        
-        graphicsContext.setFill(Color.LIGHTGRAY);
-        graphicsContext.setStroke(Color.BLACK);
-        graphicsContext.setLineWidth(5);
-
-        graphicsContext.fill();
-        graphicsContext.strokeRect(0, 0, canvasWidth, canvasHeight);
-
-        graphicsContext.setFill(Color.RED);
-        graphicsContext.setStroke(Color.BLUE);
-        graphicsContext.setLineWidth(1);
+//        double canvasWidth = graphicsContext.getCanvas().getWidth();
+//        double canvasHeight = graphicsContext.getCanvas().getHeight();
 
     	canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, 
     		new EventHandler<MouseEvent>() {
@@ -81,7 +77,7 @@ public class ClientController implements Runnable {
 					startYL = event.getY();
 	            	graphicsContext.beginPath();
 	            	graphicsContext.moveTo(startXL, startYL);
-	            	graphicsContext.setStroke(Color.BLACK);
+	            	graphicsContext.setStroke(color);
             		graphicsContext.stroke();
             		
             		try {
@@ -91,16 +87,15 @@ public class ClientController implements Runnable {
 						jw.object();
 						jw.key("tool").value("pen");
 						jw.key("action").value("pressed");
+						jw.key("color").value("" + color);
 						jw.key("x").value("" + startXL);
 						jw.key("y").value("" + startYL);
 						jw.endObject();
 						dos.writeUTF(sw.toString());
 	        			dos.flush();
 					} catch (UnsupportedEncodingException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -112,7 +107,7 @@ public class ClientController implements Runnable {
 				public void handle(MouseEvent event) {
 					double x = event.getX();
 					double y = event.getY();
-	            	graphicsContext.setStroke(Color.BLACK);
+	            	graphicsContext.setStroke(color);
 	            	graphicsContext.lineTo(x, y);
 	            	graphicsContext.stroke();
             		
@@ -123,16 +118,15 @@ public class ClientController implements Runnable {
 						jw.object();
 						jw.key("tool").value("pen");
 						jw.key("action").value("dragged");
+						jw.key("color").value("" + color.toString());
 						jw.key("x").value("" + x);
 						jw.key("y").value("" + y);
 						jw.endObject();
 						dos.writeUTF(sw.toString());
 	        			dos.flush();
 					} catch (UnsupportedEncodingException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -158,20 +152,29 @@ public class ClientController implements Runnable {
 						jw.object();
 						jw.key("tool").value("pen");
 						jw.key("action").value("released");
+						jw.key("color").value("" + color.toString());
 						jw.key("x").value("" + x);
 						jw.key("y").value("" + y);
 						jw.endObject();
 						dos.writeUTF(sw.toString());
 	        			dos.flush();
 					} catch (UnsupportedEncodingException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
     		});
+    	
+    	tgColor.selectedToggleProperty().addListener(new ChangeListener<Toggle>()
+        {
+	        @Override
+	        public void changed(ObservableValue<? extends Toggle> ov, Toggle t, Toggle t1)
+            {
+	        	RadioButton rb = (RadioButton)t1.getToggleGroup().getSelectedToggle();
+	        	color = Color.valueOf(rb.getStyleClass().toString().split(" ")[1]);
+            }
+        });
     }
     
     @FXML
@@ -215,7 +218,7 @@ public class ClientController implements Runnable {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
-    }	
+    }
 
 	@Override
 	public void run() {	
@@ -245,6 +248,8 @@ public class ClientController implements Runnable {
 					case Constants.CANVAS_BROADCAST:
 						String str = dis.readUTF();
 						JSONObject obj = new JSONObject(str);
+						int c = Integer.decode(obj.getString("color").substring(0, 8));
+						Color col = Color.rgb((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
 						String tool = obj.getString("tool");
 						
 						if(tool.equals("pen"))
@@ -260,14 +265,14 @@ public class ClientController implements Runnable {
 									@Override public void run() {
 						            	graphicsContext.beginPath();
 						            	graphicsContext.moveTo(startXR, startYR);
-						            	graphicsContext.setStroke(Color.BLACK);
+						            	graphicsContext.setStroke(col);
 					            		graphicsContext.stroke();
 									}
 								});
 							} else if(action.equals("dragged")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
-						            	graphicsContext.setStroke(Color.BLACK);
+						            	graphicsContext.setStroke(col);
 						            	graphicsContext.lineTo(x, y);
 						            	graphicsContext.stroke();
 									}
@@ -292,14 +297,6 @@ public class ClientController implements Runnable {
 				e.printStackTrace();
 			}
 		}
-	}
-	
-	/// @todo implement generic types
-	public void SizeChanged(double width, double height) {
-		double canvasWidth = (2f / 3f) * width;
-		double canvasHeight = (3f / 4f) * height;
-        canvas.setWidth(canvasWidth);
-        canvas.setHeight(canvasHeight);
 	}
 }
 

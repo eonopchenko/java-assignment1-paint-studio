@@ -3,14 +3,17 @@
 <?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nz.ac.unitec.client.ClientController">
    <left>
-      <ListView fx:id="lvUsers" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+      <ListView fx:id="lvUsers" onMouseClicked="#lvUsersOnMouseClickedHandler" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
    </left>
    <bottom>
       <HBox BorderPane.alignment="CENTER">
@@ -22,12 +25,35 @@
    </bottom>
    <center>
       <BorderPane BorderPane.alignment="BOTTOM_CENTER">
-         <top>
-            <Canvas fx:id="canvas" width="400.0" height="300.0" nodeOrientation="INHERIT" BorderPane.alignment="CENTER" />
-         </top>
          <bottom>
             <TextArea fx:id="taChat" editable="false" prefHeight="80.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
          </bottom>
+         <center>
+         </center>
+         <right>
+         </right>
+         <right>
+            <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+				<fx:define>
+					<ToggleGroup fx:id="tgColor" />
+				</fx:define>
+				<children>
+					<RadioButton styleClass="red" text="">
+                     <toggleGroup>
+                        <ToggleGroup fx:id="tgColor" />
+                     </toggleGroup></RadioButton>
+					<RadioButton styleClass="orange" text="" toggleGroup="$tgColor" />
+					<RadioButton styleClass="yellow" text="" toggleGroup="$tgColor" />
+					<RadioButton styleClass="green" text="" toggleGroup="$tgColor" />
+					<RadioButton styleClass="blue" text="" toggleGroup="$tgColor" />
+					<RadioButton styleClass="purple" text="" toggleGroup="$tgColor" />
+					<RadioButton selected="true" styleClass="black" text="" toggleGroup="$tgColor" />
+				</children>
+            </VBox>
+         </right>
+         <center>
+            <Canvas fx:id="canvas" height="200.0" width="200.0" BorderPane.alignment="CENTER" />
+         </center>
       </BorderPane>
    </center>
 </BorderPane>
