@@ -34,13 +34,6 @@ import javafx.scene.paint.Color;
 
 public class ClientController implements Runnable {
 	
-	private enum Tool {
-		PEN,
-		LINE,
-		CIRCLE,
-		RECTANGLE,
-	}
-	
 	Socket client;
 	DataInputStream dis;
 	DataOutputStream dos;
@@ -88,38 +81,20 @@ public class ClientController implements Runnable {
 					
 					startXL = event.getX();
 					startYL = event.getY();
-					
-        			StringWriter sw = new StringWriter();
-					JSONWriter jw = new JSONWriter(sw);
-					jw.object();
-					
-					if(tool == Tool.PEN) {
+
+	            	graphicsContext.setStroke(color);
+	            	
+					if((tool.equals(Tool.PEN)) || (tool.equals(Tool.LINE))) {
 		            	graphicsContext.beginPath();
 		            	graphicsContext.moveTo(startXL, startYL);
-		            	graphicsContext.setStroke(color);
 	            		graphicsContext.stroke();
-						jw.key("tool").value("pen");
-					} else if(tool == Tool.LINE) {
-		            	graphicsContext.beginPath();
-		            	graphicsContext.moveTo(startXL, startYL);
-		            	graphicsContext.setStroke(color);
-	            		graphicsContext.stroke();
-						jw.key("tool").value("line");
-					} else if(tool == Tool.CIRCLE) {
-		            	graphicsContext.beginPath();
-		            	graphicsContext.moveTo(startXL, startYL);
-		            	graphicsContext.setStroke(color);
-	            		graphicsContext.stroke();
-						jw.key("tool").value("circle");
-					} else if(tool == Tool.RECTANGLE) {
-		            	graphicsContext.beginPath();
-		            	graphicsContext.moveTo(startXL, startYL);
-		            	graphicsContext.setStroke(color);
-	            		graphicsContext.stroke();
-						jw.key("tool").value("rectangle");
 					}
-            		
+					
             		try {
+            			StringWriter sw = new StringWriter();
+    					JSONWriter jw = new JSONWriter(sw);
+    					jw.object();
+    					jw.key("tool").value(tool.toString());
 						jw.key("action").value("pressed");
 						jw.key("color").value("" + color);
 						jw.key("x").value("" + startXL);
@@ -144,24 +119,16 @@ public class ClientController implements Runnable {
 					double x = event.getX();
 					double y = event.getY();
 					
-        			StringWriter sw = new StringWriter();
-					JSONWriter jw = new JSONWriter(sw);
-					jw.object();
-
-					if(tool == Tool.PEN) {
-		            	graphicsContext.setStroke(color);
-		            	graphicsContext.lineTo(x, y);
-		            	graphicsContext.stroke();
-						jw.key("tool").value("pen");
-					} else if(tool == Tool.LINE) {
-						jw.key("tool").value("line");
-					} else if(tool == Tool.CIRCLE) {
-						jw.key("tool").value("circle");
-					} else if(tool == Tool.RECTANGLE) {
-						jw.key("tool").value("rectangle");
+					if(tool.equals(Tool.PEN)) {
+			            graphicsContext.lineTo(x, y);
+			            graphicsContext.stroke();
 					}
             		
             		try {
+            			StringWriter sw = new StringWriter();
+    					JSONWriter jw = new JSONWriter(sw);
+    					jw.object();
+            			jw.key("tool").value(tool.toString());
 						jw.key("action").value("dragged");
 						jw.key("color").value("" + color.toString());
 						jw.key("x").value("" + x);
@@ -186,29 +153,16 @@ public class ClientController implements Runnable {
 					double x = event.getX();
 					double y = event.getY();
 					
-        			StringWriter sw = new StringWriter();
-					JSONWriter jw = new JSONWriter(sw);
-					jw.object();
-
-					if(tool == Tool.PEN) {
-						jw.key("tool").value("pen");
-					} else if(tool == Tool.LINE) {
+					if(tool == Tool.LINE) {
 		            	graphicsContext.lineTo(x, y);
 		            	graphicsContext.stroke();
-						jw.key("tool").value("line");
-					} else if(tool == Tool.CIRCLE) {
-						double w = startXL < x ? x - startXL : startXL - x;
-						double h = startYL < y ? y - startYL : startYL - y;
-						graphicsContext.strokeOval(startXL < x ? startXL : x, startYL < y ? startYL : y, w, h);
-						jw.key("tool").value("circle");
-					} else if(tool == Tool.RECTANGLE) {
-						double w = startXL < x ? x - startXL : startXL - x;
-						double h = startYL < y ? y - startYL : startYL - y;
-						graphicsContext.strokeRect(startXL < x ? startXL : x, startYL < y ? startYL : y, w, h);
-						jw.key("tool").value("rectangle");
 					}
             		
             		try {
+            			StringWriter sw = new StringWriter();
+    					JSONWriter jw = new JSONWriter(sw);
+    					jw.object();
+            			jw.key("tool").value(tool.toString());
 						jw.key("action").value("released");
 						jw.key("color").value("" + color.toString());
 						jw.key("x").value("" + x);
@@ -241,16 +195,7 @@ public class ClientController implements Runnable {
 	        public void changed(ObservableValue<? extends Toggle> ov, Toggle t, Toggle t1)
             {
 	        	RadioButton rb = (RadioButton)t1.getToggleGroup().getSelectedToggle();
-	        	String id = rb.idProperty().getValue();
-	        	if(id.equals("pen")) {
-	        		tool = Tool.PEN;
-	        	} else if(id.equals("line")) {
-	        		tool = Tool.LINE;
-	        	} else if(id.equals("circle")) {
-	        		tool = Tool.CIRCLE;
-	        	} else if(id.equals("rectangle")) {
-	        		tool = Tool.RECTANGLE;
-	        	}
+	        	tool = new Tool(Tool.valueOf(rb.idProperty().getValue()));
             }
         });
     }
@@ -299,7 +244,7 @@ public class ClientController implements Runnable {
     }
 
 	@Override
-	public void run() {	
+	public void run() {
 		while(true)
 		{
 			try {
@@ -326,54 +271,48 @@ public class ClientController implements Runnable {
 					case Constants.CANVAS_BROADCAST:
 						String str = dis.readUTF();
 						JSONObject obj = new JSONObject(str);
+						
+						/// Set stroke color
 						int c = Integer.decode(obj.getString("color").substring(0, 8));
-						Color col = Color.rgb((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
+		            	graphicsContext.setStroke(Color.rgb((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF));
+		            	
 						double x = obj.getDouble("x");
 						double y = obj.getDouble("y");
 						String action = obj.getString("action");
 						String tl = obj.getString("tool");
 						
-						if(tl.equals("pen")) {
+						if(action.equals("pressed")) {
+							startXR = x;
+							startYR = y;
+						}
+						
+						/// Pen
+						if(Tool.PEN.toString().equals(tl)) {
 							if(action.equals("pressed")) {
-								startXR = x;
-								startYR = y;
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
 						            	graphicsContext.beginPath();
 						            	graphicsContext.moveTo(startXR, startYR);
-						            	graphicsContext.setStroke(col);
 					            		graphicsContext.stroke();
 									}
 								});
 							} else if(action.equals("dragged")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
-						            	graphicsContext.setStroke(col);
 						            	graphicsContext.lineTo(x, y);
 						            	graphicsContext.stroke();
 									}
 								});
-							} else if(action.equals("released")) {
-								Platform.runLater(new Runnable() {
-									@Override public void run() {
-									}
-								});
 							}
-						} else if(tl.equals("line")) {
+						
+						/// Line
+						} else if(Tool.LINE.toString().equals(tl)) {
 							if(action.equals("pressed")) {
-								startXR = x;
-								startYR = y;
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
 						            	graphicsContext.beginPath();
 						            	graphicsContext.moveTo(startXR, startYR);
-						            	graphicsContext.setStroke(col);
 					            		graphicsContext.stroke();
-									}
-								});
-							} else if(action.equals("dragged")) {
-								Platform.runLater(new Runnable() {
-									@Override public void run() {
 									}
 								});
 							} else if(action.equals("released")) {
@@ -384,55 +323,23 @@ public class ClientController implements Runnable {
 									}
 								});
 							}
-						} else if(tl.equals("circle")) {
-							if(action.equals("pressed")) {
-								startXR = x;
-								startYR = y;
+							
+						/// Circle
+						} else if(Tool.CIRCLE.toString().equals(tl)) {
+							if(action.equals("released")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
-						            	graphicsContext.beginPath();
-						            	graphicsContext.moveTo(startXR, startYR);
-						            	graphicsContext.setStroke(col);
-					            		graphicsContext.stroke();
-									}
-								});
-							} else if(action.equals("dragged")) {
-								Platform.runLater(new Runnable() {
-									@Override public void run() {
-									}
-								});
-							} else if(action.equals("released")) {
-								Platform.runLater(new Runnable() {
-									@Override public void run() {
-										double w = startXR < x ? x - startXR : startXR - x;
-										double h = startYR < y ? y - startYR : startYR - y;
-										graphicsContext.strokeOval(startXR < x ? startXR : x, startYR < y ? startYR : y, w, h);
+										drawCircle(startXR, startYR, x, y);
 									}
 								});
 							}
-						} else if(tl.equals("rectangle")) {
-							if(action.equals("pressed")) {
-								startXR = x;
-								startYR = y;
+							
+						/// Rectangle
+						} else if(Tool.RECTANGLE.toString().equals(tl)) {
+							if(action.equals("released")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
-						            	graphicsContext.beginPath();
-						            	graphicsContext.moveTo(startXR, startYR);
-						            	graphicsContext.setStroke(col);
-					            		graphicsContext.stroke();
-									}
-								});
-							} else if(action.equals("dragged")) {
-								Platform.runLater(new Runnable() {
-									@Override public void run() {
-									}
-								});
-							} else if(action.equals("released")) {
-								Platform.runLater(new Runnable() {
-									@Override public void run() {
-										double w = startXR < x ? x - startXR : startXR - x;
-										double h = startYR < y ? y - startYR : startYR - y;
-										graphicsContext.strokeRect(startXR < x ? startXR : x, startYR < y ? startYR : y, w, h);
+										drawRectangle(startXR, startYR, x, y);
 									}
 								});
 							}
@@ -446,6 +353,22 @@ public class ClientController implements Runnable {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	void drawCircle(double startX, double startY, double endX, double endY) {
+		double topLeftX = startX < endX ? startX : endX;
+		double topLeftY = startY < endY ? startY : endY;
+		double w = startX < endX ? endX - startX : startX - endX;
+		double h = startY < endY ? endY - startY : startY - endY;
+		graphicsContext.strokeOval(topLeftX, topLeftY, w, h);
+	}
+	
+	void drawRectangle(double startX, double startY, double endX, double endY) {
+		double topLeftX = startX < endX ? startX : endX;
+		double topLeftY = startY < endY ? startY : endY;
+		double w = startX < endX ? endX - startX : startX - endX;
+		double h = startY < endY ? endY - startY : startY - endY;
+		graphicsContext.strokeRect(topLeftX, topLeftY, w, h);
 	}
 }
 
