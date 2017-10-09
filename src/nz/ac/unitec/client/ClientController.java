@@ -100,10 +100,22 @@ public class ClientController implements Runnable {
 	            		graphicsContext.stroke();
 						jw.key("tool").value("pen");
 					} else if(tool == Tool.LINE) {
+		            	graphicsContext.beginPath();
+		            	graphicsContext.moveTo(startXL, startYL);
+		            	graphicsContext.setStroke(color);
+	            		graphicsContext.stroke();
 						jw.key("tool").value("line");
 					} else if(tool == Tool.CIRCLE) {
+		            	graphicsContext.beginPath();
+		            	graphicsContext.moveTo(startXL, startYL);
+		            	graphicsContext.setStroke(color);
+	            		graphicsContext.stroke();
 						jw.key("tool").value("circle");
 					} else if(tool == Tool.RECTANGLE) {
+		            	graphicsContext.beginPath();
+		            	graphicsContext.moveTo(startXL, startYL);
+		            	graphicsContext.setStroke(color);
+	            		graphicsContext.stroke();
 						jw.key("tool").value("rectangle");
 					}
             		
@@ -179,15 +191,20 @@ public class ClientController implements Runnable {
 					jw.object();
 
 					if(tool == Tool.PEN) {
-		            	double endX = x - startXL;
-		            	endX =  endX < 0 ? (endX * -1) : endX;
-		            	double endY = y - startYL;
-		            	endY = endY < 0 ? (endY * -1) : endY;
+						jw.key("tool").value("pen");
 					} else if(tool == Tool.LINE) {
+		            	graphicsContext.lineTo(x, y);
+		            	graphicsContext.stroke();
 						jw.key("tool").value("line");
 					} else if(tool == Tool.CIRCLE) {
+						double w = startXL < x ? x - startXL : startXL - x;
+						double h = startYL < y ? y - startYL : startYL - y;
+						graphicsContext.strokeOval(startXL < x ? startXL : x, startYL < y ? startYL : y, w, h);
 						jw.key("tool").value("circle");
 					} else if(tool == Tool.RECTANGLE) {
+						double w = startXL < x ? x - startXL : startXL - x;
+						double h = startYL < y ? y - startYL : startYL - y;
+						graphicsContext.strokeRect(startXL < x ? startXL : x, startYL < y ? startYL : y, w, h);
 						jw.key("tool").value("rectangle");
 					}
             		
@@ -339,36 +356,85 @@ public class ClientController implements Runnable {
 							} else if(action.equals("released")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
-						            	double endX = x - startXR;
-						            	endX =  endX < 0 ? (endX * -1) : endX;
-						            	double endY = y - startYR;
-						            	endY = endY < 0 ? (endY * -1) : endY;
 									}
 								});
 							}
 						} else if(tl.equals("line")) {
 							if(action.equals("pressed")) {
-								
+								startXR = x;
+								startYR = y;
+								Platform.runLater(new Runnable() {
+									@Override public void run() {
+						            	graphicsContext.beginPath();
+						            	graphicsContext.moveTo(startXR, startYR);
+						            	graphicsContext.setStroke(col);
+					            		graphicsContext.stroke();
+									}
+								});
 							} else if(action.equals("dragged")) {
-								
+								Platform.runLater(new Runnable() {
+									@Override public void run() {
+									}
+								});
 							} else if(action.equals("released")) {
-								
+								Platform.runLater(new Runnable() {
+									@Override public void run() {
+						            	graphicsContext.lineTo(x, y);
+						            	graphicsContext.stroke();
+									}
+								});
 							}
 						} else if(tl.equals("circle")) {
 							if(action.equals("pressed")) {
-								
+								startXR = x;
+								startYR = y;
+								Platform.runLater(new Runnable() {
+									@Override public void run() {
+						            	graphicsContext.beginPath();
+						            	graphicsContext.moveTo(startXR, startYR);
+						            	graphicsContext.setStroke(col);
+					            		graphicsContext.stroke();
+									}
+								});
 							} else if(action.equals("dragged")) {
-								
+								Platform.runLater(new Runnable() {
+									@Override public void run() {
+									}
+								});
 							} else if(action.equals("released")) {
-								
+								Platform.runLater(new Runnable() {
+									@Override public void run() {
+										double w = startXR < x ? x - startXR : startXR - x;
+										double h = startYR < y ? y - startYR : startYR - y;
+										graphicsContext.strokeOval(startXR < x ? startXR : x, startYR < y ? startYR : y, w, h);
+									}
+								});
 							}
 						} else if(tl.equals("rectangle")) {
 							if(action.equals("pressed")) {
-								
+								startXR = x;
+								startYR = y;
+								Platform.runLater(new Runnable() {
+									@Override public void run() {
+						            	graphicsContext.beginPath();
+						            	graphicsContext.moveTo(startXR, startYR);
+						            	graphicsContext.setStroke(col);
+					            		graphicsContext.stroke();
+									}
+								});
 							} else if(action.equals("dragged")) {
-								
+								Platform.runLater(new Runnable() {
+									@Override public void run() {
+									}
+								});
 							} else if(action.equals("released")) {
-								
+								Platform.runLater(new Runnable() {
+									@Override public void run() {
+										double w = startXR < x ? x - startXR : startXR - x;
+										double h = startYR < y ? y - startYR : startYR - y;
+										graphicsContext.strokeRect(startXR < x ? startXR : x, startYR < y ? startYR : y, w, h);
+									}
+								});
 							}
 						}
 	            		
