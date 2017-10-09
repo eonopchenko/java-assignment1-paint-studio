@@ -9,6 +9,7 @@
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nz.ac.unitec.client.ClientController">
@@ -70,7 +71,11 @@
 		     </HBox>
          </right>
          <center>
-            <Canvas fx:id="canvas" height="300.0" width="200.0" BorderPane.alignment="CENTER" />
+            <Pane fx:id="wrapperPane" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Canvas fx:id="canvas" height="200.0" width="200.0" />
+               </children>
+            </Pane>
          </center>
       </BorderPane>
    </center>

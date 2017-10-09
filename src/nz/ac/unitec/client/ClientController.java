@@ -12,7 +12,6 @@ import org.json.JSONObject;
 import org.json.JSONWriter;
 
 import javafx.application.Platform;
-import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -30,6 +29,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 
 public class ClientController implements Runnable {
@@ -38,13 +38,13 @@ public class ClientController implements Runnable {
 	DataInputStream dis;
 	DataOutputStream dos;
 	ObservableList<String> names = FXCollections.observableArrayList();
-	double startXL;
-	double startYL;
-	double startXR;
-	double startYR;
-	GraphicsContext graphicsContext;
-	Color color = Color.BLACK;
-	Tool tool = Tool.PEN;
+	double startXL;				///< Local startX coordinate
+	double startYL;				///< Local startY coordinate
+	double startXR;				///< Remote startX coordinate
+	double startYR;				///< Remote startY coordinate
+	GraphicsContext gc;
+	Color color = Color.BLACK;	///< Current color
+	Tool tool = Tool.PEN;		///< Current tool
 	
 	@FXML
 	private ListView<String> lvUsers;
@@ -62,18 +62,27 @@ public class ClientController implements Runnable {
 	private Canvas canvas;
 	
 	@FXML
-	ToggleGroup tgColor;
+	private ToggleGroup tgColor;
 	
 	@FXML
-	ToggleGroup tgTool;
+	private ToggleGroup tgTool;
+	
+	@FXML
+	private Pane wrapperPane;
     
     @FXML
     void initialize() {
-    	graphicsContext = canvas.getGraphicsContext2D();
     	
-//        double canvasWidth = graphicsContext.getCanvas().getWidth();
-//        double canvasHeight = graphicsContext.getCanvas().getHeight();
-
+    	/// Bind Wrapper Pane and Canvas dimensions
+        canvas.widthProperty().bind(wrapperPane.widthProperty());
+        canvas.heightProperty().bind(wrapperPane.heightProperty());
+        canvas.widthProperty().addListener(event -> draw(canvas));
+        canvas.heightProperty().addListener(event -> draw(canvas));
+        draw(canvas);
+    	
+    	gc = canvas.getGraphicsContext2D();
+    	
+    	/// Mouse pressed event
     	canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, 
     		new EventHandler<MouseEvent>() {
 				@Override
@@ -82,12 +91,12 @@ public class ClientController implements Runnable {
 					startXL = event.getX();
 					startYL = event.getY();
 
-	            	graphicsContext.setStroke(color);
+	            	gc.setStroke(color);
 	            	
 					if((tool.equals(Tool.PEN)) || (tool.equals(Tool.LINE))) {
-		            	graphicsContext.beginPath();
-		            	graphicsContext.moveTo(startXL, startYL);
-	            		graphicsContext.stroke();
+		            	gc.beginPath();
+		            	gc.moveTo(startXL, startYL);
+	            		gc.stroke();
 					}
 					
             		try {
@@ -111,6 +120,7 @@ public class ClientController implements Runnable {
 				}
 			});
 
+    	/// Mouse dragged event
     	canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, 
     		new EventHandler<MouseEvent>() {
 				@Override
@@ -120,8 +130,8 @@ public class ClientController implements Runnable {
 					double y = event.getY();
 					
 					if(tool.equals(Tool.PEN)) {
-			            graphicsContext.lineTo(x, y);
-			            graphicsContext.stroke();
+			            gc.lineTo(x, y);
+			            gc.stroke();
 					}
             		
             		try {
@@ -145,6 +155,7 @@ public class ClientController implements Runnable {
 				}
     		});
 
+    	/// Mouse released event
     	canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, 
     		new EventHandler<MouseEvent>() {
 				@Override
@@ -154,8 +165,8 @@ public class ClientController implements Runnable {
 					double y = event.getY();
 					
 					if(tool == Tool.LINE) {
-		            	graphicsContext.lineTo(x, y);
-		            	graphicsContext.stroke();
+		            	gc.lineTo(x, y);
+		            	gc.stroke();
 					}
             		
             		try {
@@ -179,6 +190,7 @@ public class ClientController implements Runnable {
 				}
     		});
     	
+    	/// Color picking
     	tgColor.selectedToggleProperty().addListener(new ChangeListener<Toggle>()
         {
 	        @Override
@@ -189,6 +201,7 @@ public class ClientController implements Runnable {
             }
         });
     	
+    	/// Tool picking
     	tgTool.selectedToggleProperty().addListener(new ChangeListener<Toggle>()
         {
 	        @Override
@@ -259,8 +272,7 @@ public class ClientController implements Runnable {
 						String name = dis.readUTF();
 						Platform.runLater(new Runnable() {
 							@Override public void run() {
-								if(!names.contains(name))
-								{
+								if(!names.contains(name)) {
 									taChat.appendText(name + " has joined the chat"+"\n");
 									names.add(name);
 								}
@@ -274,7 +286,7 @@ public class ClientController implements Runnable {
 						
 						/// Set stroke color
 						int c = Integer.decode(obj.getString("color").substring(0, 8));
-		            	graphicsContext.setStroke(Color.rgb((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF));
+		            	gc.setStroke(Color.rgb((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF));
 		            	
 						double x = obj.getDouble("x");
 						double y = obj.getDouble("y");
@@ -291,16 +303,16 @@ public class ClientController implements Runnable {
 							if(action.equals("pressed")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
-						            	graphicsContext.beginPath();
-						            	graphicsContext.moveTo(startXR, startYR);
-					            		graphicsContext.stroke();
+						            	gc.beginPath();
+						            	gc.moveTo(startXR, startYR);
+					            		gc.stroke();
 									}
 								});
 							} else if(action.equals("dragged")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
-						            	graphicsContext.lineTo(x, y);
-						            	graphicsContext.stroke();
+						            	gc.lineTo(x, y);
+						            	gc.stroke();
 									}
 								});
 							}
@@ -310,16 +322,16 @@ public class ClientController implements Runnable {
 							if(action.equals("pressed")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
-						            	graphicsContext.beginPath();
-						            	graphicsContext.moveTo(startXR, startYR);
-					            		graphicsContext.stroke();
+						            	gc.beginPath();
+						            	gc.moveTo(startXR, startYR);
+					            		gc.stroke();
 									}
 								});
 							} else if(action.equals("released")) {
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
-						            	graphicsContext.lineTo(x, y);
-						            	graphicsContext.stroke();
+						            	gc.lineTo(x, y);
+						            	gc.stroke();
 									}
 								});
 							}
@@ -355,12 +367,15 @@ public class ClientController implements Runnable {
 		}
 	}
 	
+	void draw(Canvas c) {
+	}
+	
 	void drawCircle(double startX, double startY, double endX, double endY) {
 		double topLeftX = startX < endX ? startX : endX;
 		double topLeftY = startY < endY ? startY : endY;
 		double w = startX < endX ? endX - startX : startX - endX;
 		double h = startY < endY ? endY - startY : startY - endY;
-		graphicsContext.strokeOval(topLeftX, topLeftY, w, h);
+		gc.strokeOval(topLeftX, topLeftY, w, h);
 	}
 	
 	void drawRectangle(double startX, double startY, double endX, double endY) {
@@ -368,7 +383,7 @@ public class ClientController implements Runnable {
 		double topLeftY = startY < endY ? startY : endY;
 		double w = startX < endX ? endX - startX : startX - endX;
 		double h = startY < endY ? endY - startY : startY - endY;
-		graphicsContext.strokeRect(topLeftX, topLeftY, w, h);
+		gc.strokeRect(topLeftX, topLeftY, w, h);
 	}
 }
 

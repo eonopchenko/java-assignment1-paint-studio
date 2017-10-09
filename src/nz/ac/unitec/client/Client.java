@@ -1,24 +1,16 @@
 package nz.ac.unitec.client;
-import java.net.URL;
 import java.util.Optional;
 
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
-import nz.ac.unitec.client.ClientController;
-
 public class Client extends Application {
 	private static String name;
-	private double width;
-	private double height;
-	
-    public void start(Stage primaryStage) throws Exception {
+	public void start(Stage primaryStage) throws Exception {
 
 	    	TextInputDialog dialog = new TextInputDialog("Walter");
 	    	dialog.setTitle("Nickname Input");
