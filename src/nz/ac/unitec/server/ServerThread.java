@@ -3,7 +3,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+
+import nz.ac.unitec.client.Constants;
 
 public class ServerThread extends Thread
 {
@@ -106,7 +109,31 @@ public class ServerThread extends Thread
 						}
 						
 						break;
-				}				
+						
+					case Constants.IMAGE_BROADCAST:
+						/// Read image from input stream
+				        byte[] sizeAr = new byte[4];
+				        dis.read(sizeAr);
+				        int size = ByteBuffer.wrap(sizeAr).asIntBuffer().get();
+						
+				        byte[] imageAr = new byte[size];
+				        dis.read(imageAr);
+				        
+				        /// Write image to output stream
+				        try {
+							for(ServerThread otherClient: connectedClients)
+							{
+								otherClient.getDos().writeInt(Constants.IMAGE_BROADCAST);
+								otherClient.getDos().write(sizeAr);
+								otherClient.getDos().write(imageAr);
+								otherClient.getDos().flush();
+							}
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+				        
+						break;
+				}
 			}
 			catch (IOException e)
 			{

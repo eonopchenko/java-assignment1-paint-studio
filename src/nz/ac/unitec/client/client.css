@@ -54,9 +54,9 @@
 }
 
 .radio-button:selected>.radio>.dot{
-  	-fx-border-color: blue ;
- 	-fx-border-width: 2 ; 
-	-fx-border-style: segments(1, 1, 1, 1)  line-cap round ;
+  	-fx-border-color: blue;
+ 	-fx-border-width: 2; 
+	-fx-border-style: segments(1, 1, 1, 1)  line-cap round;
 }
 
 .red .radio .dot{

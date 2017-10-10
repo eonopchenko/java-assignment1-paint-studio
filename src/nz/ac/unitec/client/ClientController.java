@@ -1,12 +1,19 @@
 package nz.ac.unitec.client;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+
+import javax.imageio.ImageIO;
 
 import org.json.JSONObject;
 import org.json.JSONWriter;
@@ -28,9 +35,12 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 public class ClientController implements Runnable {
 	
@@ -45,6 +55,7 @@ public class ClientController implements Runnable {
 	GraphicsContext gc;
 	Color color = Color.BLACK;	///< Current color
 	Tool tool = Tool.PEN;		///< Current tool
+	private Stage stage;
 	
 	@FXML
 	private ListView<String> lvUsers;
@@ -69,6 +80,9 @@ public class ClientController implements Runnable {
 	
 	@FXML
 	private Pane wrapperPane;
+	
+	@FXML
+	private Button btnLoadImage;
     
     @FXML
     void initialize() {
@@ -167,6 +181,10 @@ public class ClientController implements Runnable {
         });
     }
     
+    public void SetStage(Stage stage) {
+    	this.stage = stage;
+    }
+    
     @FXML
     void btnSendOnActionHandler(ActionEvent event) {
 		try {
@@ -181,6 +199,40 @@ public class ClientController implements Runnable {
 			e.printStackTrace();
 		}
 		tfSend.clear();
+    }
+    
+    @FXML
+    void btnLoadImageOnActionHandler(ActionEvent event) {
+    	FileChooser fileChooser = new FileChooser();
+    	fileChooser.setTitle("Open Image File");
+    	File file = fileChooser.showOpenDialog(stage);
+    	
+    	if(file != null) {
+    	
+			Image img = new Image(file.toURI().toString());
+			BufferedImage bImage = null;
+			try {
+				bImage = ImageIO.read(file);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			gc.drawImage(img, 50, 50);
+			
+			/// Serialize and write image to the output stream
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+	        try {
+				ImageIO.write(bImage, "png", byteArrayOutputStream);
+				int s = byteArrayOutputStream.size();
+		        byte[] size = ByteBuffer.allocate(4).putInt(s).array();
+		        
+				dos.writeInt(Constants.IMAGE_BROADCAST);
+				dos.write(size);
+				dos.write(byteArrayOutputStream.toByteArray());
+				dos.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+    	}
     }
     
     @FXML
@@ -319,6 +371,22 @@ public class ClientController implements Runnable {
 							}
 						}
 	            		
+						break;
+						
+					case Constants.IMAGE_BROADCAST:
+						
+						/// Read image from input stream
+				        byte[] sizeAr = new byte[4];
+				        dis.read(sizeAr);
+				        int size = ByteBuffer.wrap(sizeAr).asIntBuffer().get();
+				        
+				        System.out.println("client: input size = " + size);
+
+				        byte[] imageAr = new byte[size];
+				        dis.read(imageAr);
+				        
+				        gc.drawImage(new Image(new ByteArrayInputStream(imageAr)), 50, 50);
+				        
 						break;
 				}
 			}

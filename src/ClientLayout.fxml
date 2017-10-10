@@ -42,9 +42,9 @@
 						</fx:define>
 						<children>
 							<RadioButton styleClass="red" text="">
-                           <toggleGroup>
-                              <ToggleGroup fx:id="tgColor" />
-                           </toggleGroup></RadioButton>
+							<toggleGroup>
+								<ToggleGroup fx:id="tgColor" />
+							</toggleGroup></RadioButton>
 							<RadioButton styleClass="orange" text="" toggleGroup="$tgColor" />
 							<RadioButton styleClass="yellow" text="" toggleGroup="$tgColor" />
 							<RadioButton styleClass="green" text="" toggleGroup="$tgColor" />
@@ -59,12 +59,13 @@
 						</fx:define>
 						<children>
 							<RadioButton id="pen" selected="true" styleClass="pen" text="">
-                           <toggleGroup>
-                              <ToggleGroup fx:id="tgTool" />
-                           </toggleGroup></RadioButton>
+							<toggleGroup>
+								<ToggleGroup fx:id="tgTool" />
+							</toggleGroup></RadioButton>
 							<RadioButton id="line" styleClass="line" text="" toggleGroup="$tgTool" />
 							<RadioButton id="circle" styleClass="circle" text="" toggleGroup="$tgTool" />
 							<RadioButton id="rectangle" styleClass="rectangle" text="" toggleGroup="$tgTool" />
+                        	<Button mnemonicParsing="false" onAction="#btnLoadImageOnActionHandler" text="Load..." />
 						</children>
 		            </VBox>
 		         </children>

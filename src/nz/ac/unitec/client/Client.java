@@ -23,7 +23,8 @@ public class Client extends Application {
 	    	    
 	    	    FXMLLoader loader = new FXMLLoader(this.getClass().getClassLoader().getResource("ClientLayout.fxml"));
 	    	    Pane mainPane = loader.load();
-//	    	    ClientController controller = loader.getController();
+	    	    ClientController controller = loader.getController();
+	    	    controller.SetStage(primaryStage);
 
 	            Scene scene = new Scene(mainPane);
 	            scene.getStylesheets().add(getClass().getResource("client.css").toExternalForm());
